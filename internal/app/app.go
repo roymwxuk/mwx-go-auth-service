@@ -6,6 +6,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/roymwxuk/mwx-go-auth-service/config"
+	"github.com/roymwxuk/mwx-go-auth-service/internal/auth"
 	"github.com/roymwxuk/mwx-go-auth-service/internal/database"
 	"github.com/roymwxuk/mwx-go-auth-service/internal/httpapi"
 )
@@ -23,7 +24,10 @@ func New(cfg *config.Config) (*App, error) {
 		return nil, err
 	}
 
-	router := httpapi.NewRouter()
+	authService := auth.NewService(auth.NewRepository(pool))
+	authHandler := auth.NewHandler(authService)
+
+	router := httpapi.NewRouter(authHandler)
 
 	server := &http.Server{
 		Addr:    ":" + cfg.Port,
