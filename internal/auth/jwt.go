@@ -41,8 +41,27 @@ func (j *JWTService) GenerateAccessToken(
 }
 
 func (j *JWTService) GenerateRefreshToken(user *User) (string, error) {
-	// TBD: implement JWT generation logic here
-	return "dummy_refresh_token", nil
+	claims := jwt.MapClaims{
+		"user_id": user.ID.String(),
+		"type":    "refresh",
+
+		"iat": time.Now().Unix(),
+		"exp": time.Now().
+			Add(30 * 24 * time.Hour).
+			Unix(),
+	}
+
+	token := jwt.NewWithClaims(
+		jwt.SigningMethodHS256,
+		claims,
+	)
+
+	tokenString, err := token.SignedString([]byte(j.secret))
+	if err != nil {
+		return "", err
+	}
+
+	return tokenString, nil
 }
 
 func (j *JWTService) VerifyAccessToken(token string) (*User, error) {
