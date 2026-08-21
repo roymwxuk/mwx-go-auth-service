@@ -22,6 +22,7 @@ func (j *JWTService) GenerateAccessToken(
 	claims := jwt.MapClaims{
 		"user_id": user.ID.String(),
 		"email":   user.Email,
+		"type":    "access",
 
 		"iat": time.Now().Unix(),
 		"exp": time.Now().
