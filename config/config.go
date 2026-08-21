@@ -16,6 +16,8 @@ type Config struct {
 func Load() (*Config, error) {
 	databaseURL := os.Getenv("DATABASE_URL")
 	port := os.Getenv("PORT")
+	googleClientID := os.Getenv("GOOGLE_CLIENT_ID")
+	googleClientSecret := os.Getenv("GOOGLE_CLIENT_SECRET")
 
 	if databaseURL == "" {
 		return nil, errors.New("Missing config: DATABASE_URL is required")
@@ -26,7 +28,9 @@ func Load() (*Config, error) {
 	}
 
 	return &Config{
-		DatabaseURL: databaseURL,
-		Port:        port,
+		DatabaseURL:        databaseURL,
+		Port:               port,
+		GoogleClientID:     googleClientID,
+		GoogleClientSecret: googleClientSecret,
 	}, nil
 }
