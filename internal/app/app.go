@@ -31,7 +31,7 @@ func New(cfg *config.Config) (*App, error) {
 	authService := auth.NewService(auth.NewRepository(pool), googleProvider, jwtService)
 	authHandler := auth.NewHandler(authService)
 
-	router := httpapi.NewRouter(authHandler)
+	router := httpapi.NewRouter(authHandler, jwtService)
 
 	server := &http.Server{
 		Addr:    ":" + cfg.Port,
