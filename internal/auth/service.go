@@ -11,12 +11,14 @@ import (
 type Service struct {
 	repo           *Repository
 	googleProvider *oauth.GoogleProvider // inject
+	jwtService     *JWTService           // inject
 }
 
-func NewService(repo *Repository, googleProvider *oauth.GoogleProvider) *Service {
+func NewService(repo *Repository, googleProvider *oauth.GoogleProvider, jwtService *JWTService) *Service {
 	return &Service{
 		repo:           repo,
 		googleProvider: googleProvider,
+		jwtService:     jwtService,
 	}
 }
 
@@ -62,5 +64,25 @@ func (s *Service) LoginWithGoogle(
 
 	// generate JWT
 
-	return nil, errors.New("TBD: not implemented")
+	accessToken, err := s.jwtService.GenerateAccessToken(user)
+	if err != nil {
+		return nil, err
+	}
+	refreshToken, err := s.jwtService.GenerateRefreshToken(user)
+	if err != nil {
+		return nil, err
+	}
+
+	return &LoginResult{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+		ExpiresIn:    s.jwtService.AccessTokenExpiryInSec(),
+	}, nil
+}
+
+func (s *Service) GetUserByID(
+	ctx context.Context,
+	userID string,
+) (*User, error) {
+	return s.repo.GetUserByID(ctx, userID)
 }

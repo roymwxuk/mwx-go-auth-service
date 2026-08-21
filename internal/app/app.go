@@ -26,11 +26,12 @@ func New(cfg *config.Config) (*App, error) {
 	}
 
 	googleProvider := oauth.NewGoogleProvider(cfg.GoogleClientID)
+	jwtService := auth.NewJWTService(cfg.JWTSecret)
 
-	authService := auth.NewService(auth.NewRepository(pool), googleProvider)
+	authService := auth.NewService(auth.NewRepository(pool), googleProvider, jwtService)
 	authHandler := auth.NewHandler(authService)
 
-	router := httpapi.NewRouter(authHandler)
+	router := httpapi.NewRouter(authHandler, jwtService)
 
 	server := &http.Server{
 		Addr:    ":" + cfg.Port,

@@ -9,7 +9,7 @@ import (
 	"github.com/roymwxuk/mwx-go-auth-service/internal/auth"
 )
 
-func NewRouter(authHandler *auth.Handler) *gin.Engine {
+func NewRouter(authHandler *auth.Handler, jwtService *auth.JWTService) *gin.Engine {
 	r := gin.Default()
 	r.Use(cors.New(cors.Config{
 		AllowOrigins: []string{
@@ -40,7 +40,10 @@ func NewRouter(authHandler *auth.Handler) *gin.Engine {
 	api.POST("/auth/google", authHandler.LoginWithGoogle)
 
 	// users
-	api.GET("/users/me", authHandler.GetMe)
+	protectedApi := api.Group("")
+	protectedApi.Use(auth.AuthMiddleware(jwtService))
+
+	protectedApi.GET("/users/me", authHandler.GetMe)
 
 	return r
 }

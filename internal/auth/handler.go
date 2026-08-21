@@ -53,7 +53,13 @@ func (h *Handler) LoginWithGoogle(c *gin.Context) {
 }
 
 func (h *Handler) GetMe(c *gin.Context) {
-	c.JSON(http.StatusNotImplemented, gin.H{
-		"status": "Not implemented: GetMe",
-	})
+	userID := c.MustGet("userID").(string)
+	user, err := h.service.GetUserByID(c.Request.Context(), userID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+	c.JSON(http.StatusOK, user)
 }
