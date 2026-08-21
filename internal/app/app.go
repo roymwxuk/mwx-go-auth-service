@@ -9,6 +9,7 @@ import (
 	"github.com/roymwxuk/mwx-go-auth-service/internal/auth"
 	"github.com/roymwxuk/mwx-go-auth-service/internal/database"
 	"github.com/roymwxuk/mwx-go-auth-service/internal/httpapi"
+	"github.com/roymwxuk/mwx-go-auth-service/internal/oauth"
 )
 
 type App struct {
@@ -24,7 +25,9 @@ func New(cfg *config.Config) (*App, error) {
 		return nil, err
 	}
 
-	authService := auth.NewService(auth.NewRepository(pool))
+	googleProvider := oauth.NewGoogleProvider(cfg.GoogleClientID)
+
+	authService := auth.NewService(auth.NewRepository(pool), googleProvider)
 	authHandler := auth.NewHandler(authService)
 
 	router := httpapi.NewRouter(authHandler)
