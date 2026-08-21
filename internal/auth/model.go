@@ -10,7 +10,7 @@ type User struct {
 	ID          uuid.UUID
 	Email       string
 	DisplayName string
-	AvatarURL   *string
+	AvatarURL   *string // for handling null values
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 }
