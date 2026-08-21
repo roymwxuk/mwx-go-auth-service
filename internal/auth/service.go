@@ -79,3 +79,10 @@ func (s *Service) LoginWithGoogle(
 		ExpiresIn:    s.jwtService.AccessTokenExpiryInSec(),
 	}, nil
 }
+
+func (s *Service) GetUserByID(
+	ctx context.Context,
+	userID string,
+) (*User, error) {
+	return s.repo.GetUserByID(ctx, userID)
+}

@@ -138,3 +138,38 @@ func (r *Repository) GetUserByIdentity(
 
 	return &user, nil
 }
+
+func (r *Repository) GetUserByID(
+	ctx context.Context,
+	userID string,
+) (*User, error) {
+	var user User
+
+	err := r.pool.QueryRow(
+		ctx,
+		`
+		SELECT
+			id,
+			email,
+			display_name,
+			avatar_url
+		FROM users
+		WHERE id = $1
+		`,
+		userID,
+	).Scan(
+		&user.ID,
+		&user.Email,
+		&user.DisplayName,
+		&user.AvatarURL,
+	)
+
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, ErrUserNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
