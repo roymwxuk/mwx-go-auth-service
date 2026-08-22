@@ -173,3 +173,41 @@ func (r *Repository) GetUserByID(
 
 	return &user, nil
 }
+
+func (r *Repository) GetRefreshTokenByJTI(
+	ctx context.Context,
+	jti string,
+) (*RefreshToken, error) {
+	const query = `
+		SELECT
+			id,
+			user_id,
+			jti,
+			created_at,
+			expires_at,
+			revoked_at
+		FROM refresh_tokens
+		WHERE jti = $1;
+	`
+	var token RefreshToken
+	err := r.pool.QueryRow(
+		ctx,
+		query,
+		jti,
+	).Scan(
+		&token.ID,
+		&token.UserID,
+		&token.JTI,
+		&token.CreatedAt,
+		&token.ExpiresAt,
+		&token.RevokedAt,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrRefreshTokenNotFound
+		}
+		return nil, err
+	}
+
+	return &token, nil
+}
