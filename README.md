@@ -8,6 +8,7 @@ Features:
 - Refresh tokens
 - User identity mapping
 - Designed for microservice architecture
+- GitHub Actions CI
 
 ---
 
