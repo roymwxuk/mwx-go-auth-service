@@ -16,6 +16,10 @@ func NewHandler(service *Service) *Handler {
 	}
 }
 
+type ErrorResponse struct {
+	Error string `json:"error"`
+}
+
 type GoogleLoginRequest struct {
 	IDToken string `json:"id_token" binding:"required"`
 }
@@ -24,6 +28,10 @@ type LoginResponse struct {
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
 	ExpiresIn    int    `json:"expires_in"`
+}
+
+type RefreshRequest struct {
+	RefreshToken string `json:"refresh_token" binding:"required"`
 }
 
 func (h *Handler) LoginWithGoogle(c *gin.Context) {
@@ -62,4 +70,34 @@ func (h *Handler) GetMe(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, user)
+}
+
+func (h *Handler) RefreshToken(c *gin.Context) {
+	var req RefreshRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse{
+			Error: "invalid request body",
+		})
+		return
+	}
+
+	loginResult, err := h.service.Refresh(
+		c.Request.Context(),
+		req.RefreshToken,
+	)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, ErrorResponse{
+			Error: "refresh token is invalid",
+		})
+		return
+	}
+
+	res := LoginResponse{
+		AccessToken:  loginResult.AccessToken,
+		RefreshToken: loginResult.RefreshToken,
+		ExpiresIn:    loginResult.ExpiresIn,
+	}
+
+	c.JSON(http.StatusOK, res)
 }

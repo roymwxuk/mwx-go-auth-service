@@ -65,6 +65,7 @@ updated_at
 GET /health
 
 POST /auth/google
+POST /auth/refresh
 
 GET  /users/me
 

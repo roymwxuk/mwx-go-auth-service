@@ -6,11 +6,14 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 )
 
 var signingMethod = jwt.SigningMethodRS384
 
 const ISSUER = "mwx-go-auth-service"
+const TOKEN_TYPE_ACCESS = "access"
+const TOKEN_TYPE_REFRESH = "refresh"
 
 type JWTService struct {
 	publicKey  *rsa.PublicKey
@@ -52,6 +55,7 @@ func (j *JWTService) GenerateRefreshToken(user *User) (string, error) {
 		"sub":  user.ID.String(),
 		"type": "refresh",
 
+		"jti": uuid.NewString(), // JWT ID
 		"iss": ISSUER,
 		"iat": time.Now().Unix(),
 		"exp": time.Now().
@@ -74,6 +78,10 @@ func (j *JWTService) GenerateRefreshToken(user *User) (string, error) {
 
 type AccessTokenClaim struct {
 	UserID string
+}
+type RefreshTokenClaim struct {
+	UserID string
+	JTI    string
 }
 
 func (j *JWTService) VerifyAccessToken(
@@ -112,6 +120,51 @@ func (j *JWTService) VerifyAccessToken(
 
 	return &AccessTokenClaim{
 		UserID: userID,
+	}, nil
+}
+
+func (j *JWTService) VerifyRefreshToken(
+	tokenString string,
+) (*RefreshTokenClaim, error) {
+	keyFunc := func(token *jwt.Token) (any, error) {
+		if token.Method != signingMethod {
+			return nil, errors.New("unexpected signing method")
+		}
+
+		return j.publicKey, nil
+	}
+	token, err := jwt.Parse(tokenString, keyFunc)
+	if err != nil {
+		return nil, err
+	}
+
+	if !token.Valid {
+		return nil, errors.New("invalid token")
+	}
+
+	claim, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return nil, errors.New("invalid claims")
+	}
+
+	userID, ok := claim["sub"].(string)
+	if !ok {
+		return nil, errors.New("missing sub")
+	}
+
+	tokenType, ok := claim["type"].(string)
+	if !ok || tokenType != TOKEN_TYPE_REFRESH {
+		return nil, errors.New("invalid token type")
+	}
+
+	jti, ok := claim["jti"].(string)
+	if !ok {
+		return nil, errors.New("invalid jti")
+	}
+
+	return &RefreshTokenClaim{
+		UserID: userID,
+		JTI:    jti,
 	}, nil
 }
 

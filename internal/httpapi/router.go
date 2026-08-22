@@ -38,6 +38,7 @@ func NewRouter(authHandler *auth.Handler, jwtService *auth.JWTService) *gin.Engi
 
 	// auth
 	api.POST("/auth/google", authHandler.LoginWithGoogle)
+	api.POST("/auth/refresh", authHandler.RefreshToken)
 
 	// users
 	protectedApi := api.Group("")

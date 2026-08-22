@@ -22,12 +22,6 @@ func NewService(repo *Repository, googleProvider *oauth.GoogleProvider, jwtServi
 	}
 }
 
-type LoginResult struct {
-	AccessToken  string
-	RefreshToken string
-	ExpiresIn    int
-}
-
 func (s *Service) LoginWithGoogle(
 	ctx context.Context,
 	idToken string,
@@ -85,4 +79,49 @@ func (s *Service) GetUserByID(
 	userID string,
 ) (*User, error) {
 	return s.repo.GetUserByID(ctx, userID)
+}
+
+func (s *Service) Refresh(
+	ctx context.Context,
+	refreshToken string,
+) (*LoginResult, error) {
+	// Verify JWT
+	claim, err := s.jwtService.VerifyRefreshToken(refreshToken)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check refresh token record
+	tokenRecord, err := s.repo.GetRefreshTokenByJTI(
+		ctx,
+		claim.JTI,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	if tokenRecord.RevokedAt != nil {
+		return nil, ErrRefreshTokenRevoked
+	}
+
+	// Get user
+	user, err := s.repo.GetUserByID(
+		ctx,
+		claim.UserID,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// Generate new access token
+	newAccessToken, err := s.jwtService.GenerateAccessToken(user)
+	if err != nil {
+		return nil, err
+	}
+
+	return &LoginResult{
+		AccessToken:  newAccessToken,
+		RefreshToken: refreshToken, // reuse existing refresh token
+		ExpiresIn:    s.jwtService.AccessTokenExpiryInSec(),
+	}, nil
 }
