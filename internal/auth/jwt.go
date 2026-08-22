@@ -1,21 +1,26 @@
 package auth
 
 import (
+	"crypto/rsa"
 	"errors"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var signingMethod = jwt.SigningMethodHS256
+var signingMethod = jwt.SigningMethodRS384
+
+const ISSUER = "mwx-go-auth-service"
 
 type JWTService struct {
-	secret string
+	publicKey  *rsa.PublicKey
+	privateKey *rsa.PrivateKey
 }
 
-func NewJWTService(secret string) *JWTService {
+func NewJWTService(publicKey *rsa.PublicKey, privateKey *rsa.PrivateKey) *JWTService {
 	return &JWTService{
-		secret: secret,
+		publicKey:  publicKey,
+		privateKey: privateKey,
 	}
 }
 
@@ -23,11 +28,12 @@ func (j *JWTService) GenerateAccessToken(
 	user *User,
 ) (string, error) {
 	claims := jwt.MapClaims{
-		"user_id": user.ID.String(),
-		"email":   user.Email,
-		"type":    "access",
+		"sub":  user.ID.String(),
+		"type": "access",
 
+		"iss": ISSUER,
 		"iat": time.Now().Unix(),
+		"nbf": time.Now().Unix(),
 		"exp": time.Now().
 			Add(15 * time.Minute).
 			Unix(),
@@ -38,16 +44,15 @@ func (j *JWTService) GenerateAccessToken(
 		claims,
 	)
 
-	return token.SignedString(
-		[]byte(j.secret),
-	)
+	return token.SignedString(j.privateKey)
 }
 
 func (j *JWTService) GenerateRefreshToken(user *User) (string, error) {
 	claims := jwt.MapClaims{
-		"user_id": user.ID.String(),
-		"type":    "refresh",
+		"sub":  user.ID.String(),
+		"type": "refresh",
 
+		"iss": ISSUER,
 		"iat": time.Now().Unix(),
 		"exp": time.Now().
 			Add(30 * 24 * time.Hour).
@@ -59,7 +64,7 @@ func (j *JWTService) GenerateRefreshToken(user *User) (string, error) {
 		claims,
 	)
 
-	tokenString, err := token.SignedString([]byte(j.secret))
+	tokenString, err := token.SignedString(j.privateKey)
 	if err != nil {
 		return "", err
 	}
@@ -69,7 +74,6 @@ func (j *JWTService) GenerateRefreshToken(user *User) (string, error) {
 
 type AccessTokenClaim struct {
 	UserID string
-	Email  string
 }
 
 func (j *JWTService) VerifyAccessToken(
@@ -80,7 +84,7 @@ func (j *JWTService) VerifyAccessToken(
 			return nil, errors.New("unexpected signing method")
 		}
 
-		return []byte(j.secret), nil
+		return j.publicKey, nil
 	}
 	token, err := jwt.Parse(tokenString, keyFunc)
 	if err != nil {
@@ -96,14 +100,9 @@ func (j *JWTService) VerifyAccessToken(
 		return nil, errors.New("invalid claims")
 	}
 
-	userID, ok := claims["user_id"].(string)
+	userID, ok := claims["sub"].(string)
 	if !ok {
-		return nil, errors.New("missing user_id")
-	}
-
-	email, ok := claims["email"].(string)
-	if !ok {
-		return nil, errors.New("missing email")
+		return nil, errors.New("missing sub")
 	}
 
 	tokenType, ok := claims["type"].(string)
@@ -113,7 +112,6 @@ func (j *JWTService) VerifyAccessToken(
 
 	return &AccessTokenClaim{
 		UserID: userID,
-		Email:  email,
 	}, nil
 }
 

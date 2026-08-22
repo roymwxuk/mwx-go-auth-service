@@ -3,7 +3,9 @@ package app
 import (
 	"context"
 	"net/http"
+	"strings"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/roymwxuk/mwx-go-auth-service/config"
 	"github.com/roymwxuk/mwx-go-auth-service/internal/auth"
@@ -26,7 +28,33 @@ func New(cfg *config.Config) (*App, error) {
 	}
 
 	googleProvider := oauth.NewGoogleProvider(cfg.GoogleClientID)
-	jwtService := auth.NewJWTService(cfg.JWTSecret)
+
+	privatePEM := strings.ReplaceAll(
+		cfg.RsaPrivateKey,
+		`\n`,
+		"\n",
+	)
+
+	privateKey, err := jwt.ParseRSAPrivateKeyFromPEM([]byte(privatePEM))
+	if err != nil {
+		return nil, err
+	}
+
+	publicPEM := strings.ReplaceAll(
+		cfg.RsaPublicKey,
+		`\n`,
+		"\n",
+	)
+
+	publicKey, err := jwt.ParseRSAPublicKeyFromPEM([]byte(publicPEM))
+	if err != nil {
+		return nil, err
+	}
+
+	jwtService := auth.NewJWTService(
+		publicKey,
+		privateKey,
+	)
 
 	authService := auth.NewService(auth.NewRepository(pool), googleProvider, jwtService)
 	authHandler := auth.NewHandler(authService)
