@@ -40,7 +40,6 @@ func AuthMiddleware(jwtService *JWTService) gin.HandlerFunc {
 		}
 
 		c.Set("userID", claim.UserID)
-		c.Set("email", claim.Email)
 
 		c.Next()
 	}
