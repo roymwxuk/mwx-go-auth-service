@@ -14,3 +14,6 @@ dev:
 
 debug:
 	@echo "DATABASE_URL=$(DATABASE_URL)"
+
+docker-build:
+	docker build -t mwx-go-auth-service:latest .
