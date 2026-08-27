@@ -32,7 +32,7 @@ func NewRouter(authHandler *auth.Handler, jwtService *auth.JWTService) *gin.Engi
 		MaxAge:           60 * time.Second,
 	}))
 
-	api := r.Group("/api")
+	api := r.Group("")
 
 	api.GET("/health", HealthHandler)
 
