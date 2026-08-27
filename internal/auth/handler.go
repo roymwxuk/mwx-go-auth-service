@@ -51,13 +51,33 @@ func (h *Handler) LoginWithGoogle(c *gin.Context) {
 		return
 	}
 
-	res := LoginResponse{
-		AccessToken:  loginResult.AccessToken,
-		RefreshToken: loginResult.RefreshToken,
-		ExpiresIn:    loginResult.ExpiresIn,
-	}
+	// todo: update for production
+	// c.SetSameSite(http.SameSiteLaxMode)
+	c.SetSameSite(http.SameSiteNoneMode)
 
-	c.JSON(http.StatusOK, res)
+	c.SetCookie(
+		"access_token",
+		loginResult.AccessToken,
+		loginResult.ExpiresIn,
+		"/",
+		"",
+		true, // Secure
+		true, // HttpOnly
+	)
+
+	c.SetCookie(
+		"refresh_token",
+		loginResult.RefreshToken,
+		60*60*24*30,
+		"/auth/refresh",
+		"",
+		true,
+		true,
+	)
+
+	c.JSON(http.StatusOK, gin.H{
+		"expires_in": loginResult.ExpiresIn,
+	})
 }
 
 func (h *Handler) GetMe(c *gin.Context) {
