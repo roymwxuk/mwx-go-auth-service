@@ -9,5 +9,6 @@ import (
 func HealthHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"status": "ok",
+		"msg":    "mw-auth-service is running",
 	})
 }
