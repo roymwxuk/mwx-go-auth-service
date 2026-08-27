@@ -60,7 +60,7 @@ func (h *Handler) LoginWithGoogle(c *gin.Context) {
 		loginResult.AccessToken,
 		loginResult.ExpiresIn,
 		"/",
-		"",
+		"roymwxuk.uk",
 		true, // Secure
 		true, // HttpOnly
 	)
