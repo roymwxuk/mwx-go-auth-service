@@ -32,7 +32,7 @@ func (j *JWTService) GenerateAccessToken(
 ) (string, error) {
 	claims := jwt.MapClaims{
 		"sub":  user.ID.String(),
-		"type": "access",
+		"type": TOKEN_TYPE_ACCESS,
 
 		"iss": ISSUER,
 		"iat": time.Now().Unix(),
@@ -53,7 +53,7 @@ func (j *JWTService) GenerateAccessToken(
 func (j *JWTService) GenerateRefreshToken(user *User) (string, error) {
 	claims := jwt.MapClaims{
 		"sub":  user.ID.String(),
-		"type": "refresh",
+		"type": TOKEN_TYPE_REFRESH,
 
 		"jti": uuid.NewString(), // JWT ID
 		"iss": ISSUER,
@@ -114,7 +114,7 @@ func (j *JWTService) VerifyAccessToken(
 	}
 
 	tokenType, ok := claims["type"].(string)
-	if !ok || tokenType != "access" {
+	if !ok || tokenType != TOKEN_TYPE_ACCESS {
 		return nil, errors.New("invalid token type")
 	}
 
