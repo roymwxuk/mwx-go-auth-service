@@ -14,6 +14,8 @@ func NewRouter(authHandler *auth.Handler, jwtService *auth.JWTService) *gin.Engi
 	r.Use(cors.New(cors.Config{
 		AllowOrigins: []string{
 			"http://localhost:3000",
+			"https://cardwisser.roymwxuk.uk",
+			"https://go.roymwxuk.uk",
 		},
 		AllowMethods: []string{
 			"GET",
