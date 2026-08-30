@@ -14,6 +14,7 @@ var signingMethod = jwt.SigningMethodRS384
 const ISSUER = "mwx-go-auth-service"
 const TOKEN_TYPE_ACCESS = "access"
 const TOKEN_TYPE_REFRESH = "refresh"
+const RefreshTokenTTL = 30 * 24 * time.Hour
 
 type JWTService struct {
 	publicKey  *rsa.PublicKey
@@ -50,17 +51,19 @@ func (j *JWTService) GenerateAccessToken(
 	return token.SignedString(j.privateKey)
 }
 
-func (j *JWTService) GenerateRefreshToken(user *User) (string, error) {
+func (j *JWTService) GenerateRefreshToken(user *User) (*RefreshTokenCreateResult, error) {
+	jti := uuid.NewString() // JWT ID
+	now := time.Now()
+	expireTime := now.Add(RefreshTokenTTL)
+
 	claims := jwt.MapClaims{
 		"sub":  user.ID.String(),
 		"type": TOKEN_TYPE_REFRESH,
 
-		"jti": uuid.NewString(), // JWT ID
+		"jti": jti,
 		"iss": ISSUER,
-		"iat": time.Now().Unix(),
-		"exp": time.Now().
-			Add(30 * 24 * time.Hour).
-			Unix(),
+		"iat": now.Unix(),
+		"exp": expireTime.Unix(),
 	}
 
 	token := jwt.NewWithClaims(
@@ -70,10 +73,15 @@ func (j *JWTService) GenerateRefreshToken(user *User) (string, error) {
 
 	tokenString, err := token.SignedString(j.privateKey)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return tokenString, nil
+	return &RefreshTokenCreateResult{
+		UserID:    user.ID,
+		JTI:       jti,
+		ExpiresAt: expireTime,
+		TokenStr:  tokenString,
+	}, nil
 }
 
 type AccessTokenClaim struct {

@@ -211,3 +211,27 @@ func (r *Repository) GetRefreshTokenByJTI(
 
 	return &token, nil
 }
+
+func (r *Repository) CreateRefreshToken(
+	ctx context.Context,
+	token *RefreshTokenCreateResult,
+) error {
+	const query = `
+		INSERT INTO refresh_tokens (
+			user_id,
+			jti,
+			expires_at
+		)
+		VALUES ($1, $2, $3)
+	`
+
+	_, err := r.pool.Exec(
+		ctx,
+		query,
+		token.UserID,
+		token.JTI,
+		token.ExpiresAt,
+	)
+
+	return err
+}
