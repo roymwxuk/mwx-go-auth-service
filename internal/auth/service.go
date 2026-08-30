@@ -62,15 +62,22 @@ func (s *Service) LoginWithGoogle(
 	if err != nil {
 		return nil, err
 	}
-	refreshToken, err := s.jwtService.GenerateRefreshToken(user)
+	refreshTokenResult, err := s.jwtService.GenerateRefreshToken(user)
 	if err != nil {
+		return nil, err
+	}
+
+	err = s.repo.CreateRefreshToken(ctx, refreshTokenResult)
+	if err != nil {
+		log.Printf("error creating RefreshToken record in db: %v\n", err)
 		return nil, err
 	}
 
 	return &LoginResult{
 		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
+		RefreshToken: refreshTokenResult.TokenStr,
 		ExpiresIn:    s.jwtService.AccessTokenExpiryInSec(),
+		ExpiresAt:    refreshTokenResult.ExpiresAt,
 	}, nil
 }
 
@@ -124,5 +131,6 @@ func (s *Service) Refresh(
 		AccessToken:  newAccessToken,
 		RefreshToken: refreshToken, // reuse existing refresh token
 		ExpiresIn:    s.jwtService.AccessTokenExpiryInSec(),
+		ExpiresAt:    tokenRecord.ExpiresAt,
 	}, nil
 }

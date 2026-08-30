@@ -34,6 +34,13 @@ type RefreshToken struct {
 	CreatedAt time.Time
 }
 
+type RefreshTokenCreateResult struct {
+	UserID    uuid.UUID
+	JTI       string
+	ExpiresAt time.Time
+	TokenStr  string
+}
+
 var ErrRefreshTokenRevoked = errors.New("refresh token revoked")
 var ErrInvalidRefreshToken = errors.New("invalid refresh token")
 var ErrRefreshTokenNotFound = errors.New("refresh token not found")
@@ -42,4 +49,5 @@ type LoginResult struct {
 	AccessToken  string
 	RefreshToken string
 	ExpiresIn    int
+	ExpiresAt    time.Time
 }
