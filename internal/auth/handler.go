@@ -102,6 +102,13 @@ func (h *Handler) RefreshToken(c *gin.Context) {
 		return
 	}
 
+	if req.RefreshToken == "" {
+		c.JSON(http.StatusBadRequest, ErrorResponse{
+			Error: "refresh token is required",
+		})
+		return
+	}
+
 	loginResult, err := h.service.Refresh(
 		c.Request.Context(),
 		req.RefreshToken,
