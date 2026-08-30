@@ -105,9 +105,9 @@ func (h *Handler) RefreshToken(c *gin.Context) {
 		})
 		return
 	}
-	log.Printf("Got token: %v\n", req.RefreshToken)
 
-	if req.RefreshToken == "" {
+	refreshToken, err := c.Cookie("refresh_token")
+	if err != nil || refreshToken == "" {
 		c.JSON(http.StatusBadRequest, ErrorResponse{
 			Error: "refresh token is required",
 		})
@@ -116,7 +116,7 @@ func (h *Handler) RefreshToken(c *gin.Context) {
 
 	loginResult, err := h.service.Refresh(
 		ctx,
-		req.RefreshToken,
+		refreshToken,
 	)
 	if err != nil {
 		log.Printf("RefreshToken error: %v\n", err)
@@ -129,7 +129,7 @@ func (h *Handler) RefreshToken(c *gin.Context) {
 
 	res := LoginResponse{
 		AccessToken:  loginResult.AccessToken,
-		RefreshToken: loginResult.RefreshToken,
+		RefreshToken: refreshToken,
 		ExpiresIn:    loginResult.ExpiresIn,
 	}
 
