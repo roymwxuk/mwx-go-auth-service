@@ -88,6 +88,7 @@ func (s *Service) Refresh(
 	// Verify JWT
 	claim, err := s.jwtService.VerifyRefreshToken(refreshToken)
 	if err != nil {
+		fmt.Printf("Refresh() verification failed: %v\n", err)
 		return nil, err
 	}
 

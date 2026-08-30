@@ -130,7 +130,6 @@ func (j *JWTService) VerifyRefreshToken(
 		if token.Method != signingMethod {
 			return nil, errors.New("unexpected signing method")
 		}
-
 		return j.publicKey, nil
 	}
 	token, err := jwt.Parse(tokenString, keyFunc)
