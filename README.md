@@ -1,5 +1,7 @@
 # mwx-go-auth-service
 
+[![CD](https://github.com/roymwxuk/mwx-go-auth-service/actions/workflows/cd.yml/badge.svg)](https://github.com/roymwxuk/mwx-go-auth-service/actions/workflows/cd.yml)
+
 A Go authentication microservice supporting Google Sign-In and JWT authentication.
 
 Features:
