@@ -3,7 +3,7 @@ package auth
 import (
 	"context"
 	"errors"
-	"fmt"
+	"log"
 
 	"github.com/roymwxuk/mwx-go-auth-service/internal/oauth"
 )
@@ -31,14 +31,14 @@ func (s *Service) LoginWithGoogle(
 		return nil, err
 	}
 
-	fmt.Printf("googleUserId: %s, username: %s\n", googleUser.ProviderUserID, googleUser.DisplayName)
+	log.Printf("googleUserId: %s, username: %s\n", googleUser.ProviderUserID, googleUser.DisplayName)
 
 	// search the user+userIdentity
 	var user *User
 	user, err = s.repo.GetUserByIdentity(ctx, googleUser.Provider, googleUser.ProviderUserID)
 	if err != nil {
 		if !errors.Is(err, ErrUserNotFound) {
-			fmt.Printf("NOT user not found error, check plz.")
+			log.Printf("NOT user not found error, check plz.")
 			return nil, err
 		}
 		// create user if user is not existing
@@ -50,11 +50,11 @@ func (s *Service) LoginWithGoogle(
 			ProviderUserID: googleUser.ProviderUserID,
 		})
 		if err != nil {
-			fmt.Printf("error creating user")
+			log.Printf("error creating user")
 			return nil, err
 		}
 	}
-	fmt.Printf("Found user:%v\n", user)
+	log.Printf("Found user:%v\n", user)
 
 	// generate JWT
 
@@ -88,7 +88,7 @@ func (s *Service) Refresh(
 	// Verify JWT
 	claim, err := s.jwtService.VerifyRefreshToken(refreshToken)
 	if err != nil {
-		fmt.Printf("Refresh() verification failed: %v\n", err)
+		log.Printf("Refresh() verification failed: %v\n", err)
 		return nil, err
 	}
 

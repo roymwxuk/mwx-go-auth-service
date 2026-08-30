@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -35,6 +36,8 @@ type RefreshRequest struct {
 }
 
 func (h *Handler) LoginWithGoogle(c *gin.Context) {
+	ctx := c.Request.Context()
+
 	var req GoogleLoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -43,7 +46,7 @@ func (h *Handler) LoginWithGoogle(c *gin.Context) {
 		return
 	}
 
-	loginResult, err := h.service.LoginWithGoogle(c.Request.Context(), req.IDToken)
+	loginResult, err := h.service.LoginWithGoogle(ctx, req.IDToken)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
@@ -94,13 +97,15 @@ func (h *Handler) GetMe(c *gin.Context) {
 
 func (h *Handler) RefreshToken(c *gin.Context) {
 	var req RefreshRequest
+	ctx := c.Request.Context()
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, ErrorResponse{
-			Error: "invalid request body",
+			Error: "invalid request body: refresh token is required",
 		})
 		return
 	}
+	log.Printf("Got token: %v\n", req.RefreshToken)
 
 	if req.RefreshToken == "" {
 		c.JSON(http.StatusBadRequest, ErrorResponse{
@@ -110,10 +115,12 @@ func (h *Handler) RefreshToken(c *gin.Context) {
 	}
 
 	loginResult, err := h.service.Refresh(
-		c.Request.Context(),
+		ctx,
 		req.RefreshToken,
 	)
 	if err != nil {
+		log.Printf("RefreshToken error: %v\n", err)
+
 		c.JSON(http.StatusUnauthorized, ErrorResponse{
 			Error: "refresh token is invalid",
 		})
