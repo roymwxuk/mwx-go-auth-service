@@ -3,6 +3,7 @@ package auth
 import (
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -26,13 +27,10 @@ type GoogleLoginRequest struct {
 }
 
 type LoginResponse struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
-	ExpiresIn    int    `json:"expires_in"`
-}
-
-type RefreshRequest struct {
-	RefreshToken string `json:"refresh_token" binding:"required"`
+	AccessToken  string    `json:"access_token"`
+	RefreshToken string    `json:"refresh_token"`
+	ExpiresIn    int       `json:"expires_in"`
+	ExpiresAt    time.Time `json:"expires_at"`
 }
 
 func (h *Handler) LoginWithGoogle(c *gin.Context) {
@@ -96,15 +94,7 @@ func (h *Handler) GetMe(c *gin.Context) {
 }
 
 func (h *Handler) RefreshToken(c *gin.Context) {
-	var req RefreshRequest
 	ctx := c.Request.Context()
-
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, ErrorResponse{
-			Error: "invalid request body: refresh token is required",
-		})
-		return
-	}
 
 	refreshToken, err := c.Cookie("refresh_token")
 	if err != nil || refreshToken == "" {
@@ -131,6 +121,7 @@ func (h *Handler) RefreshToken(c *gin.Context) {
 		AccessToken:  loginResult.AccessToken,
 		RefreshToken: refreshToken,
 		ExpiresIn:    loginResult.ExpiresIn,
+		ExpiresAt:    loginResult.ExpiresAt,
 	}
 
 	c.JSON(http.StatusOK, res)
