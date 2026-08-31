@@ -8,6 +8,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const CookieDomain = "roymwxuk.uk"
+const SecureAttribute = true
+
 type Handler struct {
 	service *Service
 }
@@ -62,8 +65,8 @@ func (h *Handler) LoginWithGoogle(c *gin.Context) {
 		loginResult.ExpiresIn,
 		"/",
 		"roymwxuk.uk",
-		true, // Secure
-		true, // HttpOnly
+		SecureAttribute, // Secure
+		true,            // HttpOnly
 	)
 
 	c.SetCookie(
@@ -117,11 +120,20 @@ func (h *Handler) RefreshToken(c *gin.Context) {
 		return
 	}
 
+	c.SetSameSite(http.SameSiteNoneMode)
+	c.SetCookie(
+		"access_token",
+		loginResult.AccessToken,
+		loginResult.ExpiresIn,
+		"/",
+		CookieDomain,
+		SecureAttribute,
+		true,
+	)
+
 	res := LoginResponse{
-		AccessToken:  loginResult.AccessToken,
-		RefreshToken: refreshToken,
-		ExpiresIn:    loginResult.ExpiresIn,
-		ExpiresAt:    loginResult.ExpiresAt,
+		ExpiresIn: loginResult.ExpiresIn,
+		ExpiresAt: loginResult.ExpiresAt,
 	}
 
 	c.JSON(http.StatusOK, res)
