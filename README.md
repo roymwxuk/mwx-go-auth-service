@@ -2,12 +2,14 @@
 
 [![CD](https://github.com/roymwxuk/mwx-go-auth-service/actions/workflows/cd.yml/badge.svg)](https://github.com/roymwxuk/mwx-go-auth-service/actions/workflows/cd.yml)
 
-A Go authentication microservice supporting Google Sign-In and JWT authentication.
+A Go authentication microservice supporting Google Sign-In, JWT authentication, and secure HttpOnly cookie-based sessions.
 
-Features:
+## Features
+
 - Google Sign-In
 - JWT authentication (RS384)
-- Refresh tokens
+- HttpOnly cookie-based authentication
+- Refresh token rotation
 - User identity mapping
 - Designed for microservice architecture
 - GitHub Actions CI
@@ -36,7 +38,11 @@ Found     Not Found
  └─────► Generate JWT
              │
              ▼
-Return Access Token + Refresh Token
+Set HttpOnly Cookies
+(access_token, refresh_token)
+       │
+       ▼
+Return User Profile
 ```
 
 ## Database schema
@@ -71,6 +77,31 @@ POST /auth/google
 POST /auth/refresh
 
 GET  /users/me
+
+## Authentication
+
+### Browser Clients
+
+Authentication uses HttpOnly cookies.
+
+After a successful login, the service issues:
+
+- access_token
+- refresh_token
+
+Both tokens are stored as secure HttpOnly cookies and are automatically sent by the browser with subsequent requests.
+
+---
+
+## Roadmap
+
+- Token endpoint for non-browser clients (`POST /auth/token`)
+- MCP client authentication support
+- Apple Sign-In
+- Email & Password authentication
+- OAuth 2.0 / OpenID Connect compatibility
+
+---
 
 ## Tech Stack
 
